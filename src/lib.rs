@@ -461,8 +461,8 @@ pub mod RectFuncs {
 /// tg_geom_intersects((struct tg_geom*)ring, geom);
 /// ```
 pub mod RingFuncs {
-    // wip
-    use crate::{tg_index, tg_point, tg_ring, tg_segment};
+    // done
+    use crate::{tg_index, tg_line, tg_point, tg_rect, tg_ring, tg_segment};
     extern "C" {
         pub fn tg_ring_new(points: *const tg_point, npoints: libc::c_int) -> *mut tg_ring;
         pub fn tg_ring_new_ix(
@@ -471,38 +471,75 @@ pub mod RingFuncs {
             ix: tg_index,
         ) -> *mut tg_ring;
         pub fn tg_ring_free(ring: *mut tg_ring);
-        /*
-        struct tg_ring *tg_ring_clone(const struct tg_ring *ring);
-        struct tg_ring *tg_ring_copy(const struct tg_ring *ring);
-        size_t tg_ring_memsize(const struct tg_ring *ring);
-        struct tg_rect tg_ring_rect(const struct tg_ring *ring);
-        int tg_ring_num_points(const struct tg_ring *ring);
-        struct tg_point tg_ring_point_at(const struct tg_ring *ring, int index);
-        const struct tg_point *tg_ring_points(const struct tg_ring *ring);
-        int tg_ring_num_segments(const struct tg_ring *ring);
-        struct tg_segment tg_ring_segment_at(const struct tg_ring *ring, int index);
-        bool tg_ring_convex(const struct tg_ring *ring);
-        bool tg_ring_clockwise(const struct tg_ring *ring);
-        int tg_ring_index_spread(const struct tg_ring *ring);
-        int tg_ring_index_num_levels(const struct tg_ring *ring);
-        int tg_ring_index_level_num_rects(const struct tg_ring *ring, int levelidx);
-        struct tg_rect tg_ring_index_level_rect(const struct tg_ring *ring, int levelidx, int rectidx);
-        bool tg_ring_nearest_segment(const struct tg_ring *ring,
-            double (*rect_dist)(struct tg_rect rect, int *more, void *udata),
-            double (*seg_dist)(struct tg_segment seg, int *more, void *udata),
-            bool (*iter)(struct tg_segment seg, double dist, int index, void *udata),
-            void *udata);
-        void tg_ring_line_search(const struct tg_ring *a, const struct tg_line *b,
-            bool (*iter)(struct tg_segment aseg, int aidx, struct tg_segment bseg,
-                int bidx, void *udata),
-            void *udata);
-        void tg_ring_ring_search(const struct tg_ring *a, const struct tg_ring *b,
-            bool (*iter)(struct tg_segment aseg, int aidx, struct tg_segment bseg,
-                int bidx, void *udata),
-            void *udata);
-        double tg_ring_area(const struct tg_ring *ring);
-        double tg_ring_perimeter(const struct tg_ring *ring);
-        */
+        pub fn tg_ring_clone(ring: *const tg_ring) -> *mut tg_ring;
+        pub fn tg_ring_copy(ring: *const tg_ring) -> *mut tg_ring;
+        pub fn tg_ring_memsize(ring: *const tg_ring) -> libc::size_t;
+        pub fn tg_ring_rect(ring: *const tg_ring) -> tg_rect;
+        pub fn tg_ring_num_points(ring: *const tg_ring) -> libc::c_int;
+        pub fn tg_ring_point_at(ring: *const tg_ring, index: libc::c_int) -> tg_point;
+        pub fn tg_ring_points(ring: *const tg_ring) -> *const tg_point;
+        pub fn tg_ring_num_segments(ring: *const tg_ring) -> libc::c_int;
+        pub fn tg_ring_segment_at(ring: *const tg_ring, index: libc::c_int) -> tg_segment;
+        pub fn tg_ring_convex(ring: *const tg_ring) -> bool;
+        pub fn tg_ring_clockwise(ring: *const tg_ring) -> bool;
+        pub fn tg_ring_index_spread(ring: *const tg_ring) -> libc::c_int;
+        pub fn tg_ring_index_num_levels(ring: *const tg_ring) -> libc::c_int;
+        pub fn tg_ring_index_level_num_rects(
+            ring: *const tg_ring,
+            levelidx: libc::c_int,
+        ) -> libc::c_int;
+        pub fn tg_ring_index_level_rect(
+            ring: *const tg_ring,
+            levelidx: libc::c_int,
+            rectidx: libc::c_int,
+        ) -> tg_rect;
+        pub fn tg_ring_nearest_segment(
+            ring: *const tg_ring,
+            seg_dist: extern "C" fn(
+                seg: tg_segment,
+                more: libc::c_int,
+                udata: *mut libc::c_void,
+            ) -> libc::c_double,
+            rect_dist: extern "C" fn(
+                rect: tg_rect,
+                more: libc::c_int,
+                udata: *mut libc::c_void,
+            ) -> libc::c_double,
+            iter: extern "C" fn(
+                seg: tg_segment,
+                dist: libc::c_double,
+                index: libc::c_int,
+                udata: *mut libc::c_void,
+            ),
+            udata: *mut libc::c_void,
+        ) -> bool;
+
+        pub fn tg_ring_line_search(
+            a: *const tg_ring,
+            b: *const tg_line,
+            iter: extern "C" fn(
+                aseg: tg_segment,
+                aidx: libc::c_int,
+                bseg: tg_segment,
+                bidx: libc::c_int,
+                udata: *mut libc::c_void,
+            ),
+            udata: *mut libc::c_void,
+        );
+        pub fn tg_ring_ring_search(
+            a: *const tg_ring,
+            b: *const tg_ring,
+            iter: extern "C" fn(
+                aseg: tg_segment,
+                aidx: libc::c_int,
+                bseg: tg_segment,
+                bidx: libc::c_int,
+                udata: *mut libc::c_void,
+            ),
+            udata: *mut libc::c_void,
+        );
+        pub fn tg_ring_area(libc: *const tg_ring) -> libc::c_double;
+        pub fn tg_ring_perimeter(libc: *const tg_ring) -> libc::c_double;
     }
 }
 
@@ -582,16 +619,24 @@ pub mod PolyFuncs {
 /// These, if desired, should be called only once at program start up and prior
 /// to calling any other tg_*() functions.
 pub mod GlobalFuncs {
-    // wip
+    // done
 
-    /*
-    void tg_env_set_allocator(void *(*malloc)(size_t), void *(*realloc)(void*, size_t), void (*free)(void*));
-    void tg_env_set_index(enum tg_index ix);
-    void tg_env_set_index_spread(int spread);
-    */
+    use crate::tg_index;
+    extern "C" {
+
+        pub fn tg_env_set_allocator(
+            malloc: extern "C" fn(size: libc::size_t) -> *mut libc::c_void,
+            realloc: extern "C" fn(
+                alloc: *mut libc::c_void,
+                size: libc::size_t,
+            ) -> *mut libc::c_void,
+            free: extern "C" fn(),
+        );
+        pub fn tg_env_set_index(ix: tg_index);
+        pub fn tg_env_set_index_spread(spread: libc::c_int);
+    }
 }
 
-////////////////////////////
 // Code from tg.h follows //
 ////////////////////////////
 

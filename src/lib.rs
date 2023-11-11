@@ -99,6 +99,8 @@ pub struct tg_geom {
     _unused: [u8; 0],
 }
 
+/// Geometry constructors
+///
 /// Functions for creating and freeing geometries.
 pub mod GeometryConstructors {
     // done
@@ -181,7 +183,8 @@ pub mod GeometryAccessors {
         );
     }
 }
-/// GeometryPredicates
+
+/// Geometry predicates
 ///
 /// Functions for testing the spatial relations of two geometries.
 pub mod GeometryPredicates {
@@ -207,7 +210,7 @@ pub mod GeometryPredicates {
     }
 }
 
-/// Geometry Parsing
+/// Geometry parsing
 ///
 /// Functions for parsing geometries from external data representations.
 /// It's recommended to use tg_geom_error() after parsing to check for errors.
@@ -392,7 +395,7 @@ pub mod GeometryConstructorsEx {
     }
 }
 
-/// Point Functions
+/// Point functions
 ///
 /// Functions for working directly with the tg_point type.
 pub mod PointFuncs {
@@ -404,7 +407,7 @@ pub mod PointFuncs {
     }
 }
 
-/// Segment Functions
+/// Segment functions
 ///
 /// Functions for working directly with the tg_segment type.
 pub mod SegmentFuncs {
@@ -415,22 +418,6 @@ pub mod SegmentFuncs {
         pub fn tg_segment_intersects_segment(a: tg_segment, b: tg_segment);
     }
 }
-
-/// @defgroup GeometryConstructors Geometry constructors
-
-/// @defgroup GeometryAccessors Geometry accessors
-
-/// @defgroup GeometryPredicates Geometry predicates
-
-/// @defgroup GeometryParsing Geometry parsing
-
-/// @defgroup GeometryWriting Geometry writing
-
-/// @defgroup GeometryConstructorsEx Geometry with alternative dimensions
-
-/// @defgroup PointFuncs Segment functions
-
-/// @defgroup SegmentFuncs Segment functions
 
 /// Rectangle functions
 ///
@@ -543,7 +530,8 @@ pub mod RingFuncs {
     }
 }
 
-/// @defgroup LineFuncs Line functions
+/// Line functions
+///
 /// Functions for working directly with the tg_line type.
 ///
 /// There are no direct spatial predicates for tg_line.
@@ -554,64 +542,104 @@ pub mod RingFuncs {
 /// tg_geom_intersects((struct tg_geom*)line, geom);
 /// ```
 pub mod LineFuncs {
-    // wip
+    // done
 
-    /*
-    struct tg_line *tg_line_new(const struct tg_point *points, int npoints);
-    struct tg_line *tg_line_new_ix(const struct tg_point *points, int npoints, enum tg_index ix);
-    void tg_line_free(struct tg_line *line);
-    struct tg_line *tg_line_clone(const struct tg_line *line);
-    struct tg_line *tg_line_copy(const struct tg_line *line);
-    size_t tg_line_memsize(const struct tg_line *line);
-    struct tg_rect tg_line_rect(const struct tg_line *line);
-    int tg_line_num_points(const struct tg_line *line);
-    const struct tg_point *tg_line_points(const struct tg_line *line);
-    struct tg_point tg_line_point_at(const struct tg_line *line, int index);
-    int tg_line_num_segments(const struct tg_line *line);
-    struct tg_segment tg_line_segment_at(const struct tg_line *line, int index);
-    bool tg_line_clockwise(const struct tg_line *line);
-    int tg_line_index_spread(const struct tg_line *line);
-    int tg_line_index_num_levels(const struct tg_line *line);
-    int tg_line_index_level_num_rects(const struct tg_line *line, int levelidx);
-    struct tg_rect tg_line_index_level_rect(const struct tg_line *line, int levelidx, int rectidx);
-    bool tg_line_nearest_segment(const struct tg_line *line,
-    double (*rect_dist)(struct tg_rect rect, int *more, void *udata),
-    double (*seg_dist)(struct tg_segment seg, int *more, void *udata),
-    bool (*iter)(struct tg_segment seg, double dist, int index, void *udata),
-    void *udata);
-    void tg_line_line_search(const struct tg_line *a, const struct tg_line *b,
-        bool (*iter)(struct tg_segment aseg, int aidx, struct tg_segment bseg,
-            int bidx, void *udata),
-            void *udata);
-    double tg_line_length(const struct tg_line *line);
-    */
+    use crate::{tg_index, tg_line, tg_point, tg_rect, tg_segment};
+
+    extern "C" {
+
+        pub fn tg_line_new(points: *const tg_point, npoints: libc::c_int) -> tg_line;
+        pub fn tg_line_new_ix(
+            points: *const tg_point,
+            npoints: libc::c_int,
+            ix: tg_index,
+        ) -> *mut tg_line;
+        pub fn tg_line_free(line: *mut tg_line);
+        pub fn tg_line_clone(line: *const tg_line) -> *mut tg_line;
+        pub fn tg_line_copy(line: *const tg_line) -> *mut tg_line;
+        pub fn tg_line_memsize(line: *const tg_line) -> libc::size_t;
+        pub fn tg_line_rect(line: *const tg_line) -> tg_rect;
+        pub fn tg_line_num_points(line: *const tg_line) -> libc::c_int;
+        pub fn tg_line_points(line: *const tg_line) -> *const tg_point;
+        pub fn tg_line_point_at(line: *const tg_line, index: libc::c_int) -> tg_point;
+        pub fn tg_line_num_segments(line: *const tg_line) -> libc::c_int;
+        pub fn tg_line_segment_at(line: *const tg_line, index: libc::c_int) -> tg_segment;
+        pub fn tg_line_clockwise(line: *const tg_line) -> bool;
+        pub fn tg_line_index_spread(line: *const tg_line) -> libc::c_int;
+        pub fn tg_line_index_num_levels(line: *const tg_line) -> libc::c_int;
+        pub fn tg_line_index_level_num_rects(
+            line: *const tg_line,
+            levelidx: libc::c_int,
+        ) -> libc::c_int;
+        pub fn tg_line_index_level_rect(
+            line: *const tg_line,
+            levelidx: libc::c_int,
+            rectidx: libc::c_int,
+        ) -> tg_rect;
+        pub fn tg_line_nearest_segment(
+            line: *const tg_line,
+            rect_dist: extern "C" fn(
+                rect: tg_rect,
+                more: *const libc::c_int,
+                udata: *mut libc::c_void,
+            ) -> libc::c_double,
+            seg_dist: extern "C" fn(
+                seg: tg_segment,
+                more: *const libc::c_int,
+                udata: *mut libc::c_void,
+            ) -> libc::c_double,
+            iter: extern "C" fn(
+                seg: tg_segment,
+                dist: libc::c_double,
+                index: libc::c_int,
+                udata: *mut libc::c_void,
+            ) -> bool,
+            udata: *mut libc::c_void,
+        ) -> bool;
+        pub fn tg_line_line_search(
+            a: *const tg_line,
+            b: *const tg_line,
+            iter: extern "C" fn(
+                aseg: tg_segment,
+                aidx: libc::c_int,
+                bseg: tg_segment,
+                bidx: libc::c_int,
+                udata: *mut libc::c_void,
+            ) -> bool,
+            udata: *mut libc::c_void,
+        );
+        pub fn tg_line_length(line: *const tg_line) -> libc::c_double;
+    }
 }
 
-/// @defgroup PolyFuncs Polygon functions
+/// Polygon functions
+///
 /// Functions for working directly with the tg_poly type.
 ///
 /// There are no direct spatial predicates for tg_poly.
 /// If you want to perform operations like "intersects" or "covers" then you
 /// must upcast the poly to a tg_geom, like such:
 ///
-/// ```
+/// ```c
 /// tg_geom_intersects((struct tg_geom*)poly, geom);
 /// ```
 pub mod PolyFuncs {
     // wip
 
-    /*
-    struct tg_poly *tg_poly_new(const struct tg_ring *exterior, const struct tg_ring *const holes[], int nholes);
-    void tg_poly_free(struct tg_poly *poly);
-    struct tg_poly *tg_poly_clone(const struct tg_poly *poly);
-    struct tg_poly *tg_poly_copy(const struct tg_poly *poly);
-    size_t tg_poly_memsize(const struct tg_poly *poly);
-    const struct tg_ring *tg_poly_exterior(const struct tg_poly *poly);
-    int tg_poly_num_holes(const struct tg_poly *poly);
-    const struct tg_ring *tg_poly_hole_at(const struct tg_poly *poly, int index);
-    struct tg_rect tg_poly_rect(const struct tg_poly *poly);
-    bool tg_poly_clockwise(const struct tg_poly *poly);
-    */
+    extern "C" {
+        /*
+        struct tg_poly *tg_poly_new(exterior: *const tg_ring, const: *const tg_ring holes[], nholes: libc::c_int);
+        void tg_poly_free(struct tg_poly *poly);
+        struct tg_poly *tg_poly_clone(poly: *const tg_poly);
+        struct tg_poly *tg_poly_copy(poly: *const tg_poly);
+        size_t tg_poly_memsize(poly: *const tg_poly);
+        const struct tg_ring *tg_poly_exterior(poly: *const tg_poly);
+        int tg_poly_num_holes(poly: *const tg_poly);
+        const struct tg_ring *tg_poly_hole_at(poly: *const tg_poly, index: libc::c_int);
+        struct tg_rect tg_poly_rect(poly: *const tg_poly);
+        bool tg_poly_clockwise(poly: *const tg_poly);
+        */
+    }
 }
 
 /// @defgroup GlobalFuncs Global environment

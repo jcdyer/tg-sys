@@ -624,21 +624,25 @@ pub mod LineFuncs {
 /// tg_geom_intersects((struct tg_geom*)poly, geom);
 /// ```
 pub mod PolyFuncs {
-    // wip
+    // done
+
+    use crate::{tg_poly, tg_rect, tg_ring};
 
     extern "C" {
-        /*
-        struct tg_poly *tg_poly_new(exterior: *const tg_ring, const: *const tg_ring holes[], nholes: libc::c_int);
-        void tg_poly_free(struct tg_poly *poly);
-        struct tg_poly *tg_poly_clone(poly: *const tg_poly);
-        struct tg_poly *tg_poly_copy(poly: *const tg_poly);
-        size_t tg_poly_memsize(poly: *const tg_poly);
-        const struct tg_ring *tg_poly_exterior(poly: *const tg_poly);
-        int tg_poly_num_holes(poly: *const tg_poly);
-        const struct tg_ring *tg_poly_hole_at(poly: *const tg_poly, index: libc::c_int);
-        struct tg_rect tg_poly_rect(poly: *const tg_poly);
-        bool tg_poly_clockwise(poly: *const tg_poly);
-        */
+        pub fn tg_poly_new(
+            exterior: *const tg_ring,
+            holes: *const *const tg_ring,
+            nholes: libc::c_int,
+        ) -> *mut tg_poly;
+        pub fn tg_poly_free(poly: *mut tg_poly);
+        pub fn tg_poly_clone(poly: *const tg_poly) -> *mut tg_poly;
+        pub fn tg_poly_copy(poly: *const tg_poly) -> *mut tg_poly;
+        pub fn tg_poly_memsize(poly: *const tg_poly) -> libc::size_t;
+        pub fn tg_poly_exterior(poly: *const tg_poly) -> *const tg_ring;
+        pub fn tg_poly_num_holes(poly: *const tg_poly) -> libc::c_int;
+        pub fn tg_poly_hole_at(poly: *const tg_poly, index: libc::c_int) -> *const tg_ring;
+        pub fn tg_poly_rect(poly: *const tg_poly) -> tg_rect;
+        pub fn tg_poly_clockwise(poly: *const tg_poly) -> bool;
     }
 }
 

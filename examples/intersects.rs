@@ -2,22 +2,17 @@ use std::ffi::CStr;
 
 #[allow(unused_braces)]
 use tg_sys::{
-    GeometryParsing::{
-        tg_parse_wkt,
-        tg_geom_error,
-    },
-    GeometryConstructors::{
-        tg_geom_free,
-    },
-    GeometryPredicates::{
-        tg_geom_intersects,
-    },
+    GeometryConstructors::tg_geom_free,
+    GeometryParsing::{tg_geom_error, tg_parse_wkt},
+    GeometryPredicates::tg_geom_intersects,
 };
 
 fn main() {
-
     if std::env::args().len() != 3 {
-        eprintln!("Usage: {} <geom-a> <geom-b>", std::env::args().nth(0).as_deref().unwrap_or("__"));
+        eprintln!(
+            "Usage: {} <geom-a> <geom-b>",
+            std::env::args().nth(0).as_deref().unwrap_or("__")
+        );
         std::process::exit(1);
     }
 
@@ -29,9 +24,13 @@ fn main() {
     let err = unsafe { tg_geom_error(a) };
     if !err.is_null() {
         let err = unsafe { CStr::from_ptr(err) };
-        eprintln!("In {}: {:?}", std::env::args().nth(1).unwrap(), err.to_str().expect("INVALID ERROR STRING"));
+        eprintln!(
+            "In {}: {:?}",
+            std::env::args().nth(1).unwrap(),
+            err.to_str().expect("INVALID ERROR STRING")
+        );
         std::process::exit(1);
-    } 
+    }
 
     let mut b = std::env::args().nth(2).unwrap();
     b.push('\0');
@@ -40,9 +39,13 @@ fn main() {
     let err = unsafe { tg_geom_error(b) };
     if !err.is_null() {
         let err = unsafe { CStr::from_ptr(err) };
-        eprintln!("In {}: {:?}", std::env::args().nth(2).unwrap(), err.to_str().expect("INVALID ERROR STRING"));
+        eprintln!(
+            "In {}: {:?}",
+            std::env::args().nth(2).unwrap(),
+            err.to_str().expect("INVALID ERROR STRING")
+        );
         std::process::exit(1);
-    } 
+    }
 
     // Execute the "intersects" predicate to test if both geometries intersect.
     if unsafe { tg_geom_intersects(a, b) } {

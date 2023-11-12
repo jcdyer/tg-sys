@@ -1,0 +1,3 @@
+[submodule "deps/tg"]
+	path = deps/tg
+	url = https://github.com/tidwall/tg

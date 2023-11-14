@@ -2,6 +2,7 @@ use std::{env, fs, path::PathBuf};
 
 fn main() {
     println!("cargo:rerun-if-env-changed=TG_SYS_STATIC");
+    println!("cargo:rerun-if-env-changed=CARGO_FEATURE_ATOMICS");
     println!("cargo:rerun-if-changed=build.rs");
 
     println!("cargo:rustc-link-lib=tg");
@@ -18,9 +19,9 @@ fn build_tg(cc: &mut cc::Build) {
 
     cc.file("deps/tg/tg.c");
 
-    //if !cfg!(feature="atomics") {
-    //    cc.define("TG_NOATOMICS", None);
-    //}
+    if !cfg!(feature="atomics") {
+        cc.define("TG_NOATOMICS", None);
+    }
 
     cc.compile("tg");
 

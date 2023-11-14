@@ -17,8 +17,8 @@ categories = ["external-ffi-bindings", "graphics", "mathematics"]
 libc = "0.2.150"
 
 [features]
-#default = ["atomics"]
-#atomics = []
+default = ["atomics"]
+atomics = []
 
 [build-dependencies]
 cc = "1.0.83"

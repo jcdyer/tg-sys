@@ -1,7 +1,8 @@
 #![allow(nonstandard_style)]
 
 /// The base point type used for all geometries.
-/// @see PointFuncs
+///
+/// - See [`PointFuncs`]
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct tg_point {
@@ -9,8 +10,10 @@ pub struct tg_point {
     pub y: libc::c_double,
 }
 
-/// The base segment type used in tg_line and tg_ring for joining two vertices.
-/// @see SegmentFuncs
+
+/// The base segment type used in [`tg_line`] and [`tg_ring`] for joining two vertices.
+///
+/// - See [`SegmentFuncs`]`
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct tg_segment {
@@ -19,10 +22,11 @@ pub struct tg_segment {
 }
 
 /// A rectangle defined by a minimum and maximum coordinates.
-/// Returned by the tg_geom_rect(), tg_ring_rect(), and other \*_rect()
+/// Returned by the [`tg_geom_rect()`][GeometryAccessors::tg_geom_rect], [`tg_ring_rect()`][RingFuncs::tg_ring_rect], and other `\*_rect()`
 /// functions for getting a geometry's minumum bounding rectangle.
 /// Also used internally for geometry indexing.
-/// @see RectFuncs
+///
+/// - See [`RectFuncs`]
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct tg_rect {
@@ -34,9 +38,9 @@ pub struct tg_rect {
 ///
 /// All tg_geom are one of the following underlying types.
 ///
-/// @see tg_geom_typeof()
-/// @see tg_geom_type_string()
-/// @see GeometryAccessors
+/// - See [`tg_geom_typeof()`][`GeometryAccessors::tg_geom_type_string`]`
+/// - See [`tg_geom_type_string()`][`GeometryAccessors::tg_geom_type_string`]
+/// - See [`GeometryAccessors`]
 #[repr(C)]
 pub enum tg_geom_type {
     ///< Point
@@ -62,7 +66,7 @@ pub enum tg_geom_type {
 ///
 /// An index can also be used for efficiently traversing, searching, and
 /// performing nearest-neighbor (kNN) queries on the segment using
-/// tg_ring_index_*() and tg_ring_nearest() functions.
+/// [`tg_ring_index_*()`][RingFuncs] and [`tg_ring_nearest_segment()`][RingFuncs::tg_ring_nearest_segment] functions.
 #[repr(C)]
 pub enum tg_index {
     ///< default is TG_NATURAL or tg_env_set_default_index().
@@ -75,25 +79,120 @@ pub enum tg_index {
     TG_YSTRIPES,
 }
 
-///< Find the description in the tg.c file.
+/// A line is a series of tg_segment that make up a linestring.
+///
+/// **Creating**
+///
+/// To create a new line use the tg_line_new() function.
+///
+/// ```c
+/// struct tg_line *line = tg_line_new(points, npoints);
+/// ```
+///
+/// **Upcasting**
+///
+/// A tg_line can always be safely upcasted to a [`tg_geom`]; allowing
+/// it to use any `tg_geom_*()` function.
+///
+/// ```c
+/// struct tg_geom *geom = (struct tg_geom*)line; // Cast to a tg_geom
+/// ```
+///
+/// - See [`LineFuncs`]
 #[repr(C)]
 pub struct tg_line {
     _unused: [u8; 0],
 }
 
-///< Find the description in the tg.c file.
+/// A ring is series of [`tg_segment`] which creates a shape that does not
+/// self-intersect and is fully closed, where the start and end points are the
+/// exact same value.
+///
+/// **Creating**
+///
+/// To create a new ring use the [`tg_ring_new()`][RingFuncs::tg_ring_new] function.
+///
+/// ```c
+/// struct tg_ring *ring = tg_ring_new(points, npoints);
+/// ```
+///
+/// **Upcasting**
+///
+/// A tg_ring can always be safely upcasted to a [`tg_poly`] or [`tg_geom`]; allowing
+/// it to use any [`tg_poly_*()`][PolyFuncs] or [`tg_geom_*()`][RingFuncs] function.
+///
+/// ```c
+/// struct tg_poly *poly = (struct tg_poly*)ring; // Cast to a tg_poly
+/// struct tg_geom *geom = (struct tg_geom*)ring; // Cast to a tg_geom
+/// ```
+/// - See [`RingFuncs`]
+/// - See [`PolyFuncs`]
 #[repr(C)]
 pub struct tg_ring {
     _unused: [u8; 0],
 }
 
-///< Find the description in the tg.c file.
+/// A polygon consists of one exterior ring and zero or more holes.
+///
+/// **Creating**
+///
+/// To create a new polygon use the [`tg_poly_new()`][PolyFuncs::tg_poly_new] function.
+///
+/// ```c
+/// struct tg_poly *poly = tg_poly_new(exterior, holes, nholes);
+/// ```
+///
+/// **Upcasting**
+///
+/// A tg_poly can always be safely upcasted to a [`tg_geom`]; allowing
+/// it to use any tg_geom_&ast;() function.
+///
+/// ```c
+/// struct tg_geom *geom = (struct tg_geom*)poly; // Cast to a tg_geom
+/// ```
+///
+/// - See [`PolyFuncs`]
 #[repr(C)]
 pub struct tg_poly {
     _unused: [u8; 0],
 }
 
-///< Find the description in the tg.c file.
+/// A geometry is the common generic type that can represent a Point,
+/// LineString, Polygon, MultiPoint, MultiLineString, MultiPolygon, or
+/// GeometryCollection.
+///
+/// For geometries that are derived from GeoJSON, they may have addtional
+/// attributes such as being a Feature or a FeatureCollection; or include
+/// extra json fields.
+///
+/// **Creating**
+///
+/// To create a new geometry use one of the [`GeometryConstructors`] or
+/// [`GeometryParsing`] functions.
+///
+/// ```c
+/// struct tg_geom *geom = tg_geom_new_point(point);
+/// struct tg_geom *geom = tg_geom_new_polygon(poly);
+/// struct tg_geom *geom = tg_parse_geojson(geojson);
+/// ```
+///
+/// **Upcasting**
+///
+/// Other types, specifically [`tg_line`], [`tg_ring`], and [`tg_poly`], can be safely
+/// upcasted to a tg_geom; allowing them to use any tg_geom_&ast;()
+/// function.
+///
+/// ```c
+/// struct tg_geom *geom1 = (struct tg_geom*)line; // Cast to a LineString
+/// struct tg_geom *geom2 = (struct tg_geom*)ring; // Cast to a Polygon
+/// struct tg_geom *geom3 = (struct tg_geom*)poly; // Cast to a Polygon
+/// ```
+///
+/// - See [`GeometryConstructors`]
+/// - See [`GeometryAccessors`]
+/// - See [`GeometryPredicates`]
+/// - See [`GeometryParsing`]
+/// - See [`GeometryWriting`]
 #[repr(C)]
 pub struct tg_geom {
     _unused: [u8; 0],
@@ -103,35 +202,149 @@ pub struct tg_geom {
 ///
 /// Functions for creating and freeing geometries.
 pub mod GeometryConstructors {
-    // done
     use crate::tg_geom;
     use crate::{tg_line, tg_point, tg_poly};
 
     #[link(name = "tg")]
     extern "C" {
-        pub fn tg_geom_new_point(point: tg_point) -> *mut tg_geom;
+        /// Creates a Point geometry
+        ///
+        /// Returns a newly allocated geometry, or NULL if system is out of
+        /// memory.
+        ///
+        /// # Safety:
+        ///
+        /// The caller is responsible for freeing with [`tg_geom_free()`][tg_geom_free].
+        pub fn tg_geom_new_point(
+            point: tg_point) -> *mut tg_geom;
+
+        /// Creates a LineString geometry.
+        ///
+        /// Caller retains ownership of the input pointer.
+        ///
+        /// Returns a newly allocated geometry or NULL if system is out of memory.
+        ///
+        /// # Safety
+        ///
+        /// The caller is responsible for freeing with [`tg_geom_free()`][tg_geom_free].
         pub fn tg_geom_new_linestring(line: *const tg_line) -> *mut tg_geom;
+
+        /// Creates a Polygon geometry.
+        ///
+        /// Caller retains ownership of the input pointer.
+        ///
+        /// Returns a newly allocated geometry or NULL if system is out of memory.
+        ///
+        /// # Safety
+        ///
+        /// The caller is responsible for freeing with [`tg_geom_free()`][tg_geom_free].
         pub fn tg_geom_new_polygon(poly: *const tg_poly) -> *mut tg_geom;
+
+        /// Creates a MultiPoint geometry.
+        ///
+        /// Returns a newly allocated geometry or NULL if system is out of memory.
+        ///
+        /// # Params
+        ///
+        /// - `points`: An array of points, caller retains ownership.
+        /// - `npoints`: The number of points in array
+        ///
+        /// # Safety
+        ///
+        /// The caller is responsible for freeing with [`tg_geom_free()`][tg_geom_free].
         pub fn tg_geom_new_multipoint(
             points: *const tg_point,
             npoints: libc::c_int,
         ) -> *mut tg_geom;
+
+
+        /// Creates a MultiLineString geometry.
+        ///
+        /// Returns a newly allocated geometry or NULL if system is out of memory.
+        ///
+        /// # Params
+        ///
+        /// - `lines`: An array of lines, caller retains ownership.
+        /// - `nlines`: The number of lines in array
+        ///
+        /// # Safety
+        ///
+        /// The caller is responsible for freeing with [`tg_geom_free()`][tg_geom_free].
         pub fn tg_geom_new_multilinestring(
             lines: *const *const tg_line,
             nlines: libc::c_int,
         ) -> *mut tg_geom;
+
+        /// Creates a MultiPolygon geometry.
+        ///
+        /// Returns a newly allocated geometry or NULL if system is out of memory.
+        ///
+        /// # Params
+        ///
+        /// - `polys`: An array of polygons, caller retains ownership.
+        /// - `npolys`: The number of polygons in array
+        ///
+        /// # Safety
+        ///
+        /// The caller is responsible for freeing with [`tg_geom_free()`][tg_geom_free].
         pub fn tg_geom_new_multipolygon(
             polys: *const *const tg_poly,
             npolys: libc::c_int,
         ) -> *mut tg_geom;
+
+        /// Creates a GeometryCollection geometry.
+        ///
+        /// Returns a newly allocated geometry or NULL if system is out of memory.
+        ///
+        /// # Params
+        ///
+        /// - `geoms`: An array of geometries, caller retains ownership.
+        /// - `ngeoms`: The number of geometries in array
+        ///
+        /// # Safety
+        ///
+        /// The caller is responsible for freeing with [`tg_geom_free()`][tg_geom_free].
         pub fn tg_geom_new_geometrycollection(
             geoms: *const *const tg_geom,
             ngeoms: libc::c_int,
         ) -> *mut tg_geom;
-        pub fn tg_geom_clone(geom: *const tg_geom) -> *mut tg_geom;
-        pub fn tg_geom_copy(geom: *const tg_geom) -> *mut tg_geom;
-        pub fn tg_geom_free(geom: *mut tg_geom);
 
+        /// Clones a geometry
+        ///
+        /// Returns a duplicate of the provided geometry.
+        ///
+        /// This method of cloning uses implicit sharing through an atomic
+        /// reference counter.
+        ///
+        /// # Params
+        ///
+        /// - `geom`: Input geometry, caller retains ownership.
+        ///
+        /// # Safety
+        ///
+        /// The caller is responsible for freeing with [`tg_geom_free()`][tg_geom_free].
+        pub fn tg_geom_clone(geom: *const tg_geom) -> *mut tg_geom;
+
+        /// Copies a geometry
+        ///
+        /// Returns a duplicate of the provided geometry or NULL if out of memory
+        ///
+        /// This method performs a deep copy of the entire geometry to new memory.
+        ///
+        /// # Params
+        ///
+        /// - `geom`: Input geometry, caller retains ownership.
+        ///
+        /// # Safety
+        ///
+        /// The caller is responsible for freeing with tg_geom_free().
+        pub fn tg_geom_copy(geom: *const tg_geom) -> *mut tg_geom;
+
+        /// Releases the memory associated with a geometry.
+        /// # Params
+        ///
+        /// - `geom`: Input geometry
+        pub fn tg_geom_free(geom: *mut tg_geom);
     }
 }
 
@@ -415,7 +628,7 @@ pub mod SegmentFuncs {
     #[link(name = "tg")]
     extern "C" {
         pub fn tg_segment_rect(s: tg_segment) -> tg_rect;
-        pub fn tg_segment_intersects_segment(a: tg_segment, b: tg_segment);
+        pub fn tg_segment_intersects_segment(a: tg_segment, b: tg_segment) -> bool;
     }
 }
 
@@ -548,7 +761,7 @@ pub mod LineFuncs {
 
     extern "C" {
 
-        pub fn tg_line_new(points: *const tg_point, npoints: libc::c_int) -> tg_line;
+        pub fn tg_line_new(points: *const tg_point, npoints: libc::c_int) -> *mut tg_line;
         pub fn tg_line_new_ix(
             points: *const tg_point,
             npoints: libc::c_int,

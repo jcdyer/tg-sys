@@ -1,6 +1,5 @@
 use std::ffi::CStr;
 
-#[allow(unused_braces)]
 use tg_sys::{
     GeometryConstructors::tg_geom_free,
     GeometryParsing::{tg_geom_error, tg_parse_wkt},
@@ -11,7 +10,7 @@ fn main() {
     if std::env::args().len() != 3 {
         eprintln!(
             "Usage: {} <geom-a> <geom-b>",
-            std::env::args().nth(0).as_deref().unwrap_or("__")
+            std::env::args().next().as_deref().unwrap_or("__")
         );
         std::process::exit(1);
     }

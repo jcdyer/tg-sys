@@ -693,16 +693,44 @@ pub mod RingFuncs {
             levelidx: libc::c_int,
             rectidx: libc::c_int,
         ) -> tg_rect;
+
+        /// Iterates over segments from nearest to farthest.
+        ///
+        /// This is a kNN operation.
+        ///
+        /// The caller must provide their own "rect_dist" and "seg_dist" callbacks to
+        /// do the actual distance calculations.
+        ///
+        /// @param ring Input ring
+        ///
+        /// @param rect_dist Callback that returns the distance to a tg_rect.
+        ///
+        /// @param seg_dist Callback that returns the distance to a tg_segment.
+        ///
+        /// @param iter Callback that returns each segment in the ring in order of
+        /// nearest to farthest. Caller must return true to continue to the next
+        /// segment, or return false to stop iterating.
+        ///
+        /// @param udata User-defined data
+        ///
+        /// @return True if operation succeeded, false if out of memory.
+        ///
+        /// @note Though not typical, this operation may need to allocate memory.
+        /// It's recommended to check the return value for success.
+        /// @note The `*more` argument is an optional ref-value that is used for
+        /// performing partial step-based or probability-based calculations. A detailed
+        /// description of its use is outside the scope of this document. Ignoring it
+        /// altogether is the preferred behavior.
         pub fn tg_ring_nearest_segment(
             ring: *const tg_ring,
             seg_dist: extern "C" fn(
                 seg: tg_segment,
-                more: libc::c_int,
+                more: *mut libc::c_int,
                 udata: *mut libc::c_void,
             ) -> libc::c_double,
             rect_dist: extern "C" fn(
                 rect: tg_rect,
-                more: libc::c_int,
+                more: *mut libc::c_int,
                 udata: *mut libc::c_void,
             ) -> libc::c_double,
             iter: extern "C" fn(
@@ -761,44 +789,165 @@ pub mod LineFuncs {
 
     extern "C" {
 
+        /// Creates a line from a series of points.
+        /// @param points Array of points
+        /// @param npoints Number of points in array
+        /// @return A newly allocated line
+        /// @return NULL if out of memory
+        /// @note A tg_line can be safely upcasted to a tg_geom. `(struct tg_geom*)line`
+        /// @note All lines with 32 or more points are automatically indexed.
         pub fn tg_line_new(points: *const tg_point, npoints: libc::c_int) -> *mut tg_line;
+
+        /// Creates a line from a series of points using provided index option.
+        /// @param points Array of points
+        /// @param npoints Number of points in array
+        /// @param ix Indexing option, e.g. TG_NONE, TG_NATURAL, TG_YSTRIPES
+        /// @return A newly allocated line
+        /// @return NULL if out of memory
+        /// @note A tg_line can be safely upcasted to a tg_geom. `(struct tg_geom*)poly`
+        /// @see [tg_index](.#tg_index)
         pub fn tg_line_new_ix(
             points: *const tg_point,
             npoints: libc::c_int,
             ix: tg_index,
         ) -> *mut tg_line;
+
+        /// Releases the memory associated with a line.
+        /// @param line Input line
         pub fn tg_line_free(line: *mut tg_line);
+
+        /// Clones a line
+        /// @param line Input line, caller retains ownership.
+        /// @return A duplicate of the provided line.
+        /// @note The caller is responsible for freeing with tg_line_free().
+        /// @note This method of cloning uses implicit sharing through an atomic
+        /// reference counter.
         pub fn tg_line_clone(line: *const tg_line) -> *mut tg_line;
+
+        /// Copies a line
+        /// @param line Input line, caller retains ownership.
+        /// @return A duplicate of the provided line.
+        /// @return NULL if out of memory
+        /// @note The caller is responsible for freeing with tg_line_free().
+        /// @note This method performs a deep copy of the entire geometry to new memory.
         pub fn tg_line_copy(line: *const tg_line) -> *mut tg_line;
+
+        /// Returns the allocation size of the line.
+        /// @param line Input line
+        /// @return Size of line in bytes
         pub fn tg_line_memsize(line: *const tg_line) -> libc::size_t;
+
+        /// Returns the minimum bounding rectangle of a line.
         pub fn tg_line_rect(line: *const tg_line) -> tg_rect;
+
+        /// Returns the number of points.
+        /// @param line Input line
+        /// @return Number of points
+        /// @see tg_line_point_at()
         pub fn tg_line_num_points(line: *const tg_line) -> libc::c_int;
+
+        /// Returns the underlying point array of a line.
+        /// @param line Input line
+        /// @return Array or points
+        /// @see tg_line_num_points()
+        /// @see LineFuncs
         pub fn tg_line_points(line: *const tg_line) -> *const tg_point;
+
+        /// Returns the point at index.
+        /// @param line Input line
+        /// @param index Index of point
+        /// @return The point at index
+        /// @note This function performs bounds checking. Use tg_line_points() for
+        /// direct access to the points.
+        /// @see tg_line_num_points()
         pub fn tg_line_point_at(line: *const tg_line, index: libc::c_int) -> tg_point;
+
+        /// Returns the number of segments.
+        /// @param line Input line
+        /// @return Number of segments
+        /// @see tg_line_segment_at()
+        /// @see LineFuncs
         pub fn tg_line_num_segments(line: *const tg_line) -> libc::c_int;
+
+        /// Returns the segment at index.
+        /// @param line Input line
+        /// @param index Index of segment
+        /// @return The segment at index
+        /// @see tg_line_num_segments()
         pub fn tg_line_segment_at(line: *const tg_line, index: libc::c_int) -> tg_segment;
+
+        /// Returns true if winding order is clockwise.
+        /// @param line Input line
+        /// @return True if clockwise
+        /// @return False if counter-clockwise
         pub fn tg_line_clockwise(line: *const tg_line) -> bool;
+
+        /// Returns the indexing spread for a line.
+        ///
+        /// The "spread" is the number of segments or rectangles that are grouped
+        /// together to produce a unioned rectangle that is stored at a higher level.
+        ///
+        /// For a tree based structure, this would be the number of items per node.
+        ///
+        /// @param line Input line
+        /// @return The spread, default is 16
+        /// @return Zero if line has no indexing
+        /// @see tg_line_index_num_levels()
+        /// @see tg_line_index_level_num_rects()
+        /// @see tg_line_index_level_rect()
         pub fn tg_line_index_spread(line: *const tg_line) -> libc::c_int;
+
+        /// Returns the number of levels.
+        /// @param line Input line
+        /// @return The number of levels
+        /// @return Zero if line has no indexing
+        /// @see tg_line_index_spread()
+        /// @see tg_line_index_level_num_rects()
+        /// @see tg_line_index_level_rect()
         pub fn tg_line_index_num_levels(line: *const tg_line) -> libc::c_int;
+
+        /// Returns the number of rectangles at level.
+        /// @param line Input line
+        /// @param levelidx The index of level
+        /// @return The number of index levels
+        /// @return Zero if line has no indexing or levelidx is out of bounds.
+        /// @see tg_line_index_spread()
+        /// @see tg_line_index_num_levels()
+        /// @see tg_line_index_level_rect()
         pub fn tg_line_index_level_num_rects(
             line: *const tg_line,
             levelidx: libc::c_int,
         ) -> libc::c_int;
+
+        /// Returns a specific level rectangle.
+        /// @param line Input line
+        /// @param levelidx The index of level
+        /// @param rectidx The index of rectangle
+        /// @return The rectangle
+        /// @return Empty rectangle if line has no indexing, or levelidx or rectidx
+        /// is out of bounds.
+        /// @see tg_line_index_spread()
+        /// @see tg_line_index_num_levels()
+        /// @see tg_line_index_level_num_rects()
         pub fn tg_line_index_level_rect(
             line: *const tg_line,
             levelidx: libc::c_int,
             rectidx: libc::c_int,
         ) -> tg_rect;
+
+        /// Iterates over segments from nearest to farthest.
+        /// @see [`tg_ring_nearest_segment()`][crate::RingFuncs::tg_ring_nearest_segment]`, which shares the same interface, for a
+        /// detailed description.
         pub fn tg_line_nearest_segment(
             line: *const tg_line,
             rect_dist: extern "C" fn(
                 rect: tg_rect,
-                more: *const libc::c_int,
+                more: *mut libc::c_int,
                 udata: *mut libc::c_void,
             ) -> libc::c_double,
             seg_dist: extern "C" fn(
                 seg: tg_segment,
-                more: *const libc::c_int,
+                more: *mut libc::c_int,
                 udata: *mut libc::c_void,
             ) -> libc::c_double,
             iter: extern "C" fn(
@@ -809,6 +958,9 @@ pub mod LineFuncs {
             ) -> bool,
             udata: *mut libc::c_void,
         ) -> bool;
+
+        /// Iterates over all segments in line A that intersect with segments in line B.
+        /// @note This efficently uses the indexes of each geometry, if available.
         pub fn tg_line_line_search(
             a: *const tg_line,
             b: *const tg_line,
@@ -821,6 +973,8 @@ pub mod LineFuncs {
             ) -> bool,
             udata: *mut libc::c_void,
         );
+
+        /// Calculate the length of a line.
         pub fn tg_line_length(line: *const tg_line) -> libc::c_double;
     }
 }

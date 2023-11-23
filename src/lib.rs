@@ -723,13 +723,13 @@ pub mod RingFuncs {
         /// altogether is the preferred behavior.
         pub fn tg_ring_nearest_segment(
             ring: *const tg_ring,
-            seg_dist: extern "C" fn(
-                seg: tg_segment,
+            rect_dist: extern "C" fn(
+                rect: tg_rect,
                 more: *mut libc::c_int,
                 udata: *mut libc::c_void,
             ) -> libc::c_double,
-            rect_dist: extern "C" fn(
-                rect: tg_rect,
+            seg_dist: extern "C" fn(
+                seg: tg_segment,
                 more: *mut libc::c_int,
                 udata: *mut libc::c_void,
             ) -> libc::c_double,
@@ -738,7 +738,7 @@ pub mod RingFuncs {
                 dist: libc::c_double,
                 index: libc::c_int,
                 udata: *mut libc::c_void,
-            ),
+            ) -> bool,
             udata: *mut libc::c_void,
         ) -> bool;
 
@@ -751,7 +751,7 @@ pub mod RingFuncs {
                 bseg: tg_segment,
                 bidx: libc::c_int,
                 udata: *mut libc::c_void,
-            ),
+            ) -> bool,
             udata: *mut libc::c_void,
         );
         pub fn tg_ring_ring_search(
@@ -763,7 +763,7 @@ pub mod RingFuncs {
                 bseg: tg_segment,
                 bidx: libc::c_int,
                 udata: *mut libc::c_void,
-            ),
+            ) -> bool,
             udata: *mut libc::c_void,
         );
         pub fn tg_ring_area(libc: *const tg_ring) -> libc::c_double;
